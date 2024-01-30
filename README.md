@@ -15,6 +15,42 @@ such as this script 😉
 
 Btw, it works on Linux too!
 
+## Libby
+
+This script _will_ stop working when OverDrive finally decides to stop supporting the "classic" OverDrive app.
+
+**You don't have to worry about this as long as you can download `.odm` files from your library!**
+
+<details>
+<summary>But if you do want to worry about it sooner rather than later, you can expand this...</summary>
+
+### On Libby <sub>and the impending <sub>demise of OverDrive</sub></sub> 🤪
+
+OverDrive has been making it harder to use the `.odm` flow for a while now,
+first [removing their OverDrive app from all app stores](https://company.overdrive.com/2021/08/09/important-update-regarding-libby-and-the-overdrive-app/),
+then adding [various hurdles](#hidden-download-link) around accessing the `.odm` file for a loan from your library's website.
+
+They've been threatening to shut it down for what seems like years,
+so 🤞 they keep that up for years to come.
+But lately it does sound like they're getting more serious;
+their [Libby propaganda page](https://resources.overdrive.com/libby/) reads:
+
+> To help your library welcome more users to Libby,
+> **the legacy OverDrive app is being discontinued in early 2023**.
+
+That and I've been getting more issues/notes about it,
+so here's my position:
+
+* This repo is not called `libby` and will not be retrofitted to accommodate Libby (if that's even possible).
+* This project has no interest in circumventing DRM or aiding others to circumvent DRM. Never has, never will.
+* I too am a user of this script, and I too regret the forced migration to Libby.
+* If/when OverDrive fully shuts down, I'll be on the hunt for another way to consume audiobooks from my local public library (❤️) in a format that fits my lifestyle.
+* If I find a good solution, I'll link to it from this README.
+
+I'm going to enjoy OverDrive while it lasts, and move on when it doesn't.
+
+[r/audiobooks](https://www.reddit.com/r/audiobooks/) seems like a nice community. Let's hang out there?
+</details>
 
 ## Instructions
 
@@ -71,11 +107,18 @@ It will also set all `curl` calls to not be silent.
 
 ### Common errors
 
+###### Permission denied (executable flag)
+
 If you get an error message like `-bash: ~/.local/bin/overdrive: Permission denied` or `zsh: permission denied: overdrive`,
 you installed `overdrive` to the right place 👍, but didn't set the executable flag 😟.
 Try running the `chmod +x` command from the [Instructions](#instructions).
 
----
+###### Folder access
+
+If you see a line that reads `I/O error : Operation not permitted`,
+you probably didn't [allow Terminal / iTerm2 to access your Downloads folder](https://www.google.com/search?q=allow+terminal+access+downloads+folder+macos).
+
+###### Syntax error (HTML vs. source)
 
 If calling the script with any combination of options produces an error message like
 ```console
@@ -88,25 +131,33 @@ To fix, follow the [Instructions](#instructions) _exactly_ as shown.
 
 If you are security conscious 🧐 (good for you!), feel free to `cat -n ~/.local/bin/overdrive` after installing, but before executing the script for the first time.
 
----
+###### SSL certificate
 
 If the script fails right after a `curl` call, and then you rerun it with `--verbose` and get an error message like `curl: (60) SSL certificate problem: certificate has expired`,
 that indicates the OverDrive server cannot be verified from your system's certificate authority.
 You can bypass the security check by adding `--insecure` when calling the `overdrive` script.
 
----
+###### Expired / used license
+
+If you see a message like `The requested license is either invalid or already acquired`,
+you'll need to go back to your library and download a fresh ODM file.
+
+###### Hidden download link
 
 If your library doesn't show you the link to "Download MP3 audiobook" (i.e., the `.odm` file),
 the easiest way to get it to (re)appear is to pretend to use an OS that they do support —
-by editing the "User Agent" that your browser presents itself as.
-Simply install a Chrome or Firefox extension to customize your user agent,
-then select some Windows or pre-Catalina value from https://techblog.willshouse.com/2012/01/03/most-common-user-agents/ (or wherever), and refresh your "Loans" page.
+by editing the "User Agent" that your browser presents itself as:
+
+1. Install a [Chrome](https://chrome.google.com/webstore/detail/djflhoibgkdhkhhcedjiklpkjnoahfmg) or Firefox extension to customize your user agent.
+2. [Pick some mainstream value](https://techblog.willshouse.com/2012/01/03/most-common-user-agents/) for Windows or pre-Catalina.
+3. Configure your extension to use that value.
+4. Refresh your "Loans" page.
 
 **New** (as of 2022-02):
 you must now also click the "Do you have the OverDrive app? >" disclosure/dropdown
 to get the "Download MP3 audiobook" link to show up.
 
----
+###### Dependencies
 
 I call this a "standalone" script,
 but it actually depends on several executables being available on your `PATH`:
@@ -124,16 +175,19 @@ the following package manager one-liners should help:
 
 | Command | OS |
 |:--------|:---|
-| `brew install openssl` | # macOS<sup>†</sup>
+| _N/A_<sup>†</sup> | # macOS
 | `apt-get install curl uuid-runtime libxml2-utils libc-bin openssl coreutils` | # Debian / Ubuntu
 | `apk add bash curl util-linux libxml2-utils openssl` | # Alpine
 | `pacman -S curl util-linux libxml2 openssl coreutils` | # Arch
 | `dnf install curl glibc-common util-linux libxml2 openssl coreutils` | # Fedora
 | (_please create a [PR](https://github.com/chbrown/overdrive/pulls) to contribute a new OS!_)
 
-<sup>†</sup>Though this is unnecessary; AFAICT, all required commands are installed by default on macOS 10.14 (Mojave).
+<sup>†</sup>All required commands are installed by default on macOS 10.14 (Mojave), 10.15 (Catalina), 12.6 (Monterey),
+and probably everywhere in between — those are just the versions I've personally tested.
+It also works with the latest version of OpenSSL,
+so if you want, `brew install openssl`.
 
----
+###### Issues not emails
 
 If none of that solves your problem,
 you can [open an issue](https://github.com/chbrown/overdrive/issues/new),

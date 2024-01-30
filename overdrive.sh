@@ -4,7 +4,7 @@ set -e # exit immediately on first error
 set -o pipefail # propagate intermediate pipeline errors
 
 # should match `git describe --tags` with clean working tree
-VERSION=2.3.1
+VERSION=2.4.0
 
 OMC=1.2.0
 OS=10.11.6
@@ -15,19 +15,27 @@ usage() {
   >&2 cat <<HELP
 Usage: $(basename "$0") [-h|--help]
        $(basename "$0") --version
-       $(basename "$0") command [command2 ...] book.odm [book2.odm ...] [-v|--verbose]
+       $(basename "$0") command [command2 ...] book.odm [book2.odm ...]
 
 Commands:
   download   Download the mp3s for an OverDrive book loan.
   return     Process an early return for an OverDrive book loan.
   info       Print the author, title, and total duration (in seconds) for each OverDrive loan file.
   metadata   Print all metadata from each OverDrive loan file.
+
+Options:
+  -v|--verbose            Print shell calls to stderr and un-silent curl.
+  -o|--output DIR_FORMAT  Specify the name of the directory to download to.
+                          All instances of '@AUTHOR' and '@TITLE' are replaced with
+                          the corresponding values extracted from the metadata.
+                          Default: '@AUTHOR - @TITLE'.
 HELP
 }
 
 MEDIA=()
 COMMANDS=()
-CURLOPTS=(-s -L -A "$UserAgent" --compressed)
+CURLOPTS=(-s -L -A "$UserAgent" --compressed --retry 3)
+DIR_FORMAT='@AUTHOR - @TITLE'
 while [[ $# -gt 0 ]]; do
   case $1 in
     -h|--help)
@@ -45,6 +53,10 @@ while [[ $# -gt 0 ]]; do
       ;;
     --insecure)
       CURLOPTS+=("$1")
+      ;;
+    -o|--output)
+      shift
+      DIR_FORMAT=$1
       ;;
     *.odm)
       if [[ ! -e $1 ]]; then
@@ -285,13 +297,15 @@ download() {
   # prepare to download the parts
   baseurl=$(xmllint --xpath 'string(//Protocol[@method="download"]/@baseurl)' "$1")
 
-  dir="$Author - $Title"
+  # process substitutions in output directory pattern
+  dir="${DIR_FORMAT//@AUTHOR/$Author}"
+  dir="${dir//@TITLE/$Title}"
   >&2 printf 'Creating directory %s\n' "$dir"
   mkdir -p "$dir"
 
   # For each of the parts of the book listed in `Novel.odm`, make a request to another OverDrive endpoint,
   # which will validate the request and redirect to the actual MP3 file on their CDN,
-  # and save the result into a folder in the current directory, named like `Author - Title/Part0N.mp3`.
+  # and save the result into a folder in the current directory, named like `dir/Part0N.mp3`.
   for path in $(extract_filenames "$1"); do
     # delete from path up until the last hyphen to the get Part0N.mp3 suffix
     suffix=${path##*-}
